@@ -3,14 +3,14 @@
  * Plugin Name: EXMAGE - WordPress Image Links
  * Plugin URI: https://villatheme.com/extensions/exmage-wordpress-image-links/
  * Description: Add images using external links - Save your storage with EXMAGE effortlessly
- * Version: 1.0.18
+ * Version: 1.0.19
  * Author: VillaTheme(villatheme.com)
  * Author URI: https://villatheme.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: exmage-wp-image-links
  * Copyright 2021-2024 VillaTheme.com. All rights reserved.
- * Tested up to: 6.5
+ * Tested up to: 6.7
  * Requires PHP: 7.0
  **/
 
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.18' );
+define( 'EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.19' );
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 define( 'EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . "includes" . DIRECTORY_SEPARATOR );
@@ -47,7 +47,6 @@ if ( ! class_exists( 'EXMAGE_WP_IMAGE_LINKS' ) ) {
 	        add_action( 'init', array( $this, 'init' ) );
 	        add_action( 'admin_init', array( $this, 'admin_init' ) );
 	        add_action( 'admin_notices', array( $this, 'admin_notices' ) );
-	        add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), PHP_INT_MAX );
 	        add_action( 'wp_enqueue_media', array( $this, 'wp_enqueue_media' ), PHP_INT_MAX );
 	        /*Short link to Add new media*/
 	        add_filter( 'plugin_action_links_exmage-wp-image-links/exmage-wp-image-links.php', array( $this, 'settings_link' ) );
@@ -899,28 +898,19 @@ if ( ! class_exists( 'EXMAGE_WP_IMAGE_LINKS' ) ) {
 		}
 
 		/**
-		 * Enqueue needed scripts
-		 */
-		public function admin_enqueue_scripts() {
-			global $pagenow;
-			if ( $pagenow === 'upload.php' || $pagenow === 'media-new.php' || wp_script_is( 'media-editor' ) ) {
-				wp_enqueue_style( 'exmage-media', EXMAGE_WP_IMAGE_LINKS_CSS . 'media.css', [], EXMAGE_WP_IMAGE_LINKS_VERSION );
-				wp_enqueue_script( 'exmage-script', EXMAGE_WP_IMAGE_LINKS_JS . 'exmage.js', array( 'jquery' ), EXMAGE_WP_IMAGE_LINKS_VERSION, false );
-				wp_localize_script( 'exmage-script', 'exmage_admin_params', array(
-					'ajaxurl'                    => admin_url( 'admin-ajax.php' ),
-					'uploadurl'                  => admin_url( 'async-upload.php' ),
-					'post_id'                    => get_the_ID(),
-					'_exmage_ajax_nonce'         => wp_create_nonce( 'exmage_ajax_handle_url' ),
-					'i18n_select_existing_image' => esc_html__( 'Click here to select this image', 'exmage-wp-image-links' ),
-				) );
-			}
-		}
-
-		/**
 		 * Enqueue script wherever media is used
 		 */
 		public function wp_enqueue_media() {
 			wp_enqueue_script( 'exmage-media', EXMAGE_WP_IMAGE_LINKS_JS . 'media.js', array( 'jquery' ), EXMAGE_WP_IMAGE_LINKS_VERSION, false );
+			wp_enqueue_style( 'exmage-media', EXMAGE_WP_IMAGE_LINKS_CSS . 'media.css', [], EXMAGE_WP_IMAGE_LINKS_VERSION );
+			wp_enqueue_script( 'exmage-script', EXMAGE_WP_IMAGE_LINKS_JS . 'exmage.js', array( 'jquery' ), EXMAGE_WP_IMAGE_LINKS_VERSION, false );
+			wp_localize_script( 'exmage-script', 'exmage_admin_params', array(
+				'ajaxurl'                    => admin_url( 'admin-ajax.php' ),
+				'uploadurl'                  => admin_url( 'async-upload.php' ),
+				'post_id'                    => get_the_ID(),
+				'_exmage_ajax_nonce'         => wp_create_nonce( 'exmage_ajax_handle_url' ),
+				'i18n_select_existing_image' => esc_html__( 'Click here to select this image', 'exmage-wp-image-links' ),
+			) );
 		}
 
 		/**
