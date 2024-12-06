@@ -1,3 +1,7 @@
+/**1.0.20 - 2024.12.06**/
+– Updated: Compatible with WP 6.7.1 and  WC 9.4.3
+- Fixed: Cannot add image by URL in Media
+
 /**1.0.19 - 2024.11.21**/
 – Updated: Compatible with WP 6.7 and  WC 9.4
 – Updated: Update support class
