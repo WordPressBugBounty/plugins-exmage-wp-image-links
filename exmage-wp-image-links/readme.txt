@@ -3,7 +3,7 @@ Contributors: villatheme, mrt3vn
 Donate link: http://www.villatheme.com/donate
 Tags: elementor gallery with links, woocommerce product image external url,wordpress gallery custom links, wordpress gallery with links, wordpress image links
 Requires at least: 5.0.0
-Tested up to: 6.7.1
+Tested up to: 6.7.2
 Requires PHP: 7.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -146,7 +146,7 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 ### Plugin Links
 
 - [Project Page](https://villatheme.com/extensions/exmage-wordpress-image-links/)
-- [Report Bugs/Issues](https://wordpress.org/support/plugin/exmage-wp-image-links/)
+- [Report Bugs/Issues](https://villatheme.com/knowledge-base/security-is-our-priority/)
 
 == Installation ==
 
@@ -161,6 +161,10 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 2. Add single image URL
 
 == Changelog ==
+/**1.0.21 - 2025.01.20**/
+– Updated: Compatible with WC 9.5.2
+– Updated: Update support class
+
 /**1.0.20 - 2024.12.06**/
 – Updated: Compatible with WP 6.7.1 and  WC 9.4.3
 - Fixed: Cannot add image by URL in Media
