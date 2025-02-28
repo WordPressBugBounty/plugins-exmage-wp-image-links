@@ -3,6 +3,28 @@ jQuery(document).ready(function ($) {
     if (typeof wp === 'undefined') {
         return;
     }
+    if ($('body').hasClass('upload-php')) {
+        let filterContainer = $('.filter-items');
+        if (filterContainer.length) {
+            let url_string = window.location.href;
+            let url = new URL(url_string);
+            let current_exmage_filter = url.searchParams.get("exmage_filter");
+
+            let exmageFilter = `
+                    <div class="custom-exmage-filter" style="margin-left: 10px;display:inline-block;">
+                        <label for="image-exmage-filter">Filter Exmage:</label>
+                        <select id="image-exmage-filter" name="exmage_filter">
+                            <option value="">---Choose your filter---</option>
+                            <option value="all" ${current_exmage_filter === 'all' ? "selected" : ""}>All external images</option>
+                            <option value="only_downloaded" ${current_exmage_filter === 'only_downloaded' ? "selected" : ""}>Downloaded</option>
+                            <option value="only_undownloaded" ${current_exmage_filter === 'only_undownloaded' ? "selected" : ""}>Undownloaded</option>
+                        </select>
+                    </div>`;
+            let exmageDownload = `<a href="#" class="download_exmage_all button button-primary" style="margin-left: 10px;display:inline-block;">Download <span class="exmage_number_download">all</span> Exmage</a>`;
+
+            filterContainer.find('.actions').prepend(exmageFilter).append(exmageDownload);
+        }
+    }
     let active_media_frame;
     if (wp.media) {
         wp.media.view.Modal.prototype.on('open', function () {

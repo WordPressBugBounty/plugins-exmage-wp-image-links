@@ -15,7 +15,7 @@ Add images using external links - Save your storage with EXMAGE effortlessly
 
 EXMAGE - WordPress Image Links helps you save storage by using external image URLs. These images are shown in Media library like normal images so that you can choose them for post/product featured image, WooCommerce product gallery... or everywhere that images are chosen from Media library.
 
-[Documents](https://docs.villatheme.com/exmage-wordpress-image-links/ "Documents") | [Facebook group](https://www.facebook.com/groups/villatheme "VillaTheme")
+[Try the Demo](https://demo2.villatheme.com/exmage "Demo EXMAGE - WordPress Image Links") | [Documents](https://docs.villatheme.com/exmage-wordpress-image-links/ "Documents") | [Facebook group](https://www.facebook.com/groups/villatheme "VillaTheme")
 
 [youtube https://youtu.be/IDZdT3lAXbg]
 
@@ -161,6 +161,12 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 2. Add single image URL
 
 == Changelog ==
+/**1.0.22 - 2025.02.28**/
+- Added: Added filter images by Exmage on the upload.php page
+- Added: Bulk download external images on the upload.php page.
+– Updated: Compatible with WP 6.7.2 and WC 9.7
+– Updated: Update support class
+
 /**1.0.21 - 2025.01.20**/
 – Updated: Compatible with WC 9.5.2
 – Updated: Update support class

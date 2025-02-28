@@ -3,8 +3,51 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.exmage-migrate-button,.exmage-convert-external-button', function (event) {
         convert_attachment($(this));
     });
+    /*Add field filter external image*/
+    let ids_media = [];
 
-    function convert_attachment($button) {
+
+    $('body').on('click', '.download_exmage_all', (e) => {
+        e.preventDefault();
+        let text_count = ids_media.length > 0 ? ids_media.length : 'all';
+        if (confirm('Do you really want to download ' + text_count + ' images?')) {
+            let per_download = 5;
+
+            if(!ids_media.length){
+                get_all_attachment_id();
+            }
+            if(!ids_media.length){
+                alert("No Exmage available for download.")
+            }
+            for (let i = 0; i < per_download; i++) {
+                let current_media_id = ids_media[i],
+                    button_selector = $('#post-' + current_media_id).find('.exmage-migrate-button');
+                convert_attachment(button_selector, true);
+            }
+        }
+    });
+    $('body').on('change', 'input[name="media[]"],#cb-select-all-1', (e) => {
+        ids_media = [];
+        $('.exmage-migrate-button').map(function () {
+            let current_tr = $(this).closest('tr');
+            if (current_tr.find('input[name="media[]"]').prop('checked')) {
+                ids_media.push($(this).data('attachment_id'));
+            }
+        });
+        if (ids_media.length) {
+            $('.download_exmage_all .exmage_number_download').html(ids_media.length);
+        } else {
+            $('.download_exmage_all .exmage_number_download').html("all");
+        }
+    });
+    function get_all_attachment_id() {
+        ids_media = [];
+        $('.exmage-migrate-button').map(function () {
+            ids_media.push($(this).data('attachment_id'));
+
+        });
+    }
+    function convert_attachment($button, multiple = false) {
         let attachment_id = $button.data('attachment_id'),
             $container = $button.closest('.exmage-external-url-container'),
             $message = $container.find('.exmage-migrate-message'),
@@ -25,6 +68,17 @@ jQuery(document).ready(function ($) {
                     if (response.status === 'success') {
                         // $container.find('.exmage-external-url-content').html(response.message);
                         $container.find('.exmage-external-url-content').html('');
+                        if(multiple){
+                            ids_media = jQuery.grep(ids_media, function(value) {
+                                return value !== attachment_id;
+                            });
+
+                            if(ids_media.length){
+                                let current_media_id = ids_media[0],
+                                    button_selector = $('#post-' + current_media_id).find('.exmage-migrate-button');
+                                convert_attachment(button_selector, true);
+                            }
+                        }
                     } else {
                         $message.html('<span class="exmage-message-error"><span class="exmage-use-url-message-content">' + response.message + '</span></span>');
                     }
