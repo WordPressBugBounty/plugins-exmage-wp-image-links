@@ -3,14 +3,14 @@
  * Plugin Name: EXMAGE - WordPress Image Links
  * Plugin URI: https://villatheme.com/extensions/exmage-wordpress-image-links/
  * Description: Add images using external links - Save your storage with EXMAGE effortlessly
- * Version: 1.0.22
+ * Version: 1.0.23
  * Author: VillaTheme(villatheme.com)
  * Author URI: https://villatheme.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: exmage-wp-image-links
  * Copyright 2021-2025 VillaTheme.com. All rights reserved.
- * Tested up to: 6.7.1
+ * Tested up to: 6.7.2
  * Requires PHP: 7.0
  **/
 
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.22');
+define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.23');
 include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 define('EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path(__FILE__));
 define('EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . "includes" . DIRECTORY_SEPARATOR);
@@ -91,53 +91,55 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @param $query =
 		 */
 		public function filter_exmage_in_library_page( $query ) {
-			$screen = get_current_screen();
-			if (is_admin() && $screen && $screen->base === 'upload') {
-				if (isset($_REQUEST['exmage_filter'])) {
-					$exmage_filter = sanitize_text_field($_REQUEST['exmage_filter']);
-                    $meta_query =[];
-                    switch ($exmage_filter) {
-                        case 'only_downloaded':
-							$meta_query=[
-								'relation' => 'AND',
-								array(
-									'key'     => '_exmage_external_url',
-									'compare' => 'EXISTS',
-								),
-								array(
-									'key'     => '_exmage_imported',
-									'compare' => 'EXISTS',
-								)
-							];
-                            break;
-						case 'only_undownloaded':
-							$meta_query=[
-								'relation' => 'AND',
-								array(
-									'key'     => '_exmage_external_url',
-									'compare' => 'EXISTS',
-								),
-								array(
-									'key'     => '_exmage_imported',
-									'compare' => 'NOT EXISTS',
-								)
-							];
-							break;
-                        default:
-							$meta_query=[
-								'relation' => 'or',
-								array(
-									'key'     => '_exmage_external_url',
-									'compare' => 'EXISTS',
-								),
-								array(
-									'key'     => '_exmage_imported',
-									'compare' => 'EXISTS',
-								)
-                            ];
-                            breaK;
-                    }
-					$query->set('meta_query', $meta_query);
+			if (function_exists('get_current_screen')) {
+				$screen = get_current_screen();
+				if (is_admin() && $screen && $screen->base === 'upload') {
+					if (isset($_REQUEST['exmage_filter'])) {
+						$exmage_filter = sanitize_text_field($_REQUEST['exmage_filter']);
+						$meta_query    = [];
+						switch ($exmage_filter) {
+							case 'only_downloaded':
+								$meta_query = [
+									'relation' => 'AND',
+									array(
+										'key'     => '_exmage_external_url',
+										'compare' => 'EXISTS',
+									),
+									array(
+										'key'     => '_exmage_imported',
+										'compare' => 'EXISTS',
+									)
+								];
+								break;
+							case 'only_undownloaded':
+								$meta_query = [
+									'relation' => 'AND',
+									array(
+										'key'     => '_exmage_external_url',
+										'compare' => 'EXISTS',
+									),
+									array(
+										'key'     => '_exmage_imported',
+										'compare' => 'NOT EXISTS',
+									)
+								];
+								break;
+							default:
+								$meta_query = [
+									'relation' => 'or',
+									array(
+										'key'     => '_exmage_external_url',
+										'compare' => 'EXISTS',
+									),
+									array(
+										'key'     => '_exmage_imported',
+										'compare' => 'EXISTS',
+									)
+								];
+								break;
+						}
+						$query->set('meta_query', $meta_query);
+					}
 				}
 			}
 		}

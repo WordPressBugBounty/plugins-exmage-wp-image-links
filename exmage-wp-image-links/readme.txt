@@ -161,6 +161,9 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 2. Add single image URL
 
 == Changelog ==
+/**1.0.23 - 2025.03.03**/
+- Fixed: Fixed call to undefined function get_current_screen()
+
 /**1.0.22 - 2025.02.28**/
 - Added: Added filter images by Exmage on the upload.php page
 - Added: Bulk download external images on the upload.php page.
