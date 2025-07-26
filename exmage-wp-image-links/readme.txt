@@ -3,7 +3,7 @@ Contributors: villatheme, mrt3vn
 Donate link: http://www.villatheme.com/donate
 Tags: elementor gallery with links, woocommerce product image external url,wordpress gallery custom links, wordpress gallery with links, wordpress image links
 Requires at least: 5.0.0
-Tested up to: 6.8
+Tested up to: 6.8.2
 Requires PHP: 7.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,7 +17,7 @@ EXMAGE - WordPress Image Links helps you save storage by using external image UR
 
 [Try the Demo](https://new2new.com/?item=exmage "Demo EXMAGE - WordPress Image Links") | [Documents](https://docs.villatheme.com/?item=exmage "Documents") | [Facebook group](https://www.facebook.com/groups/villatheme "VillaTheme")
 
-[youtube https://youtu.be/IDZdT3lAXbg]
+[youtube https://youtu.be/R_hNwUIGqIQ]
 
 ### Important Notice:
 
@@ -167,6 +167,8 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 
 [Coupon Box for WooCommerce](https://wordpress.org/plugins/woo-coupon-box)
 
+[VARGAL - Additional Variation Gallery for Woo](https://wordpress.org/plugins/vargal-additional-variation-gallery-for-woo/)
+
 ### Plugin Links
 
 - [Project Page](https://villatheme.com/extensions/exmage-wordpress-image-links/)
@@ -181,10 +183,15 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 == Frequently Asked Questions ==
 
 == Screenshots ==
-1. Add multiple image URLs
-2. Add single image URL
+1. Add image using external link in add media page
+2. Add image using external link on upload popup
+3. Photo added to gallery using external link
 
 == Changelog ==
+/**1.0.25 - 2025.07.26**/
+– Updated: Compatible with WP 6.8.2 and WC 10.0.3
+– Updated: Update support class
+
 /**1.0.24 - 2025.04.18**/
 – Updated: Compatible with WP 6.8 and WC 9.8
 – Updated: Update support class

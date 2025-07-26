@@ -3,7 +3,7 @@
  * Plugin Name: EXMAGE - WordPress Image Links
  * Plugin URI: https://villatheme.com/extensions/exmage-wordpress-image-links/
  * Description: Add images using external links - Save your storage with EXMAGE effortlessly
- * Version: 1.0.24
+ * Version: 1.0.25
  * Author: VillaTheme(villatheme.com)
  * Author URI: https://villatheme.com
  * License:           GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.24');
+define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.25');
 include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 define('EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path(__FILE__));
 define('EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . "includes" . DIRECTORY_SEPARATOR);
