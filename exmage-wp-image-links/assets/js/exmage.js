@@ -95,12 +95,87 @@ jQuery(document).ready(function ($) {
 
     /*Process image url*/
     $(document).on('click', '.exmage-use-url-input-multiple-add', function () {
-        exmage_handle_url_input($(this).closest('.exmage-use-url-container').find('.exmage-use-url-input-multiple'));
+        data_preprocessing($(this).closest('.exmage-container-form').find('.exmage-use-url-input-multiple'));
+        exmage_handle_url_input($(this).closest('.exmage-container-form').find('.exmage-use-url-input-multiple'));
+    });
+
+    $(document).on('change', '.exmage-add-external-url-field.exmage-add-external-url-media', function (event) {
+        let t = $(this),
+            t_closest = t.closest('.exmage-table-tr'),
+            t_closest_table = t.closest('.exmage-wrap-body-table'),
+            t_closest_wrap_loading = t_closest_table.find('.exmage-use-url-input-overlay'),
+            t_image_preview_wrap = t_closest.find('.exmage_preview_field'),
+            t_image_preview = t_image_preview_wrap.find('.exmage-image-preview'),
+            placeholder_src = t_image_preview.data('placeholder_src');
+
+        if (isImageURL(t.val())) {
+            t_image_preview.attr('src', t.val());
+            t_image_preview_wrap.show();
+            t_closest.attr('data-media_type', 'image');
+        } else {
+            t_closest.attr('data-media_type', 'image');
+            t_image_preview.attr('src', placeholder_src);
+            t_image_preview_wrap.hide();
+        }
+
+        if (t.val() !== '') {
+            t_closest.find('.exmage-add-field').trigger('click');
+        }
+
+    });
+
+    $(document).on('click', '.exmage-delete-field', function () {
+        let t = $(this),
+            t_closet = t.closest('.exmage-table-tr'),
+            t_body_table = t.closest('.exmage-wrap-body-table');
+        let count = t_body_table.find('.exmage-table-tr').length;
+        if (count > 1) {
+            t_closet.remove();
+        } else {
+            alert('You cannot delete all fields!');
+        }
+        return false;
+    });
+    $(document).on('click', '.exmage-add-field', function () {
+        let t = $(this),
+            t_closet = t.closest('.exmage-table-tr'),
+            t_body_table = t.closest('.exmage-wrap-body-table');
+        let template = t_closet.clone();
+
+        let preview_field_img = template.find('.exmage_preview_field img');
+        template.find('.exmage-add-external-url-media').val('');/*Remove external video or image clone*/
+
+        template.attr('data-media_type', 'image');/*Set default tr media_type*/
+
+        preview_field_img.attr('src', preview_field_img.data('placeholder_src'));
+
+        t_body_table.append(template);
+        return false;
     });
 });
+function data_preprocessing($input) {
+    let $container = $input.closest('.exmage-container-form'),
+        tab_content = $container.find('.exmage-wrap-tab-content'),
+        tab_content_list = tab_content.find('.exmage-tab-content-item');
 
-function exmage_handle_url_input($input) {
-    let $container = $input.closest('.exmage-use-url-container'),
+    let arr_url = [];
+
+    let tr = tab_content_list.find('.exmage-wrap-body-table .exmage-table-tr');
+    tr.each(function (i, e) {
+        let tr_this = jQuery(this);
+        let field_url = tr_this.find('.exmage-add-external-url-field');
+        if (field_url.val()) {
+            arr_url.push(field_url.val());
+        }
+
+    });
+
+    jQuery('.exmage-use-url-input-multiple').val(arr_url.toString());
+
+
+}
+function exmage_handle_url_input($input, $type) {
+    let $container = $input.closest('.exmage-container-form'),
         $overlay = $container.find('.exmage-use-url-input-overlay'),
         $message = $container.find('.exmage-use-url-message');
     if ($overlay.hasClass('exmage-hidden')) {
@@ -160,19 +235,8 @@ function exmage_handle_url_input($input) {
                                             active_frame.content.mode('browse');
                                         }
                                         if (_state === 'library' || _state === 'edit-attachment') {
-                                            // let attachments = [];
-                                            // attachments.push(details[i].id);
-                                            // selection.map(function (attachment) {
-                                            //     attachment = attachment.toJSON();
-                                            //     if (attachment.id) {
-                                            //         attachments.push(attachment.id);
-                                            //     }
-                                            // });
                                             if (selection) {
                                                 selection.reset();
-                                                // for (let i in attachments) {
-                                                //     selection.add(wp.media.attachment(attachments[i]));
-                                                // }
                                                 selection.add(wp.media.attachment(details[i].id));
                                             }
                                             if (active_frame.content.get() && active_frame.content.get().collection) {
@@ -220,11 +284,52 @@ function exmage_handle_url_input($input) {
                     error() {
                         $message.html('<p class="exmage-message-error"><span class="exmage-use-url-message-content">An error occurs.</span></p>');
                     },
-                    complete() {
+                    complete(jqXHR, textStatus) {
                         $overlay.addClass('exmage-hidden');
+
+                        let responseJSON = jqXHR.responseJSON ?? {};
+                        if (responseJSON.details && responseJSON.details.length) {
+                            let details = responseJSON.details;
+                            if (details.length) {
+                                let details_item = details[0];
+                                if (typeof details_item.type !== 'undefined') {
+                                    jQuery('.exmage-add-external-url-field.exmage-add-external-url-media').val('');
+                                } else {
+                                    jQuery('.exmage-add-external-url-field').val('');
+                                }
+                            }
+                        }
                     }
                 });
             }
         }, 1);
     }
+}
+function isImageURL(url) {
+
+    var imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg|tiff)(\?.*)?$/i;
+
+
+    var imageDomains = [
+        /(?:https?:\/\/)?(?:.+\.)?imgur\.com\/.+/,
+        /(?:https?:\/\/)?(?:.+\.)?gyazo\.com\/.+/,
+        /(?:https?:\/\/)?(?:.+\.)?prnt\.sc\/.+/,
+        /(?:https?:\/\/)?drive\.google\.com\/uc\?id=.+/,
+        /(?:https?:\/\/)?images\.unsplash\.com\/.+/,
+        /(?:https?:\/\/)?cdn\.discordapp\.com\/attachments\/.+/,
+        /(?:https?:\/\/)?somecdn\.net\/photo\?id=.+/
+    ];
+
+
+    if (imageExtensions.test(url)) {
+        return true;
+    }
+
+    for (var i = 0; i < imageDomains.length; i++) {
+        if (imageDomains[i].test(url)) {
+            return true;
+        }
+    }
+
+    return false;
 }

@@ -1,3 +1,8 @@
+/**1.1.0 - 2025.09.05**/
+– Updated: Updated to new interface
+– Updated: Compatible with WC 10.1.2
+– Updated: Update support class
+
 /**1.0.25 - 2025.07.26**/
 – Updated: Compatible with WP 6.8.2 and WC 10.0.3
 – Updated: Update support class

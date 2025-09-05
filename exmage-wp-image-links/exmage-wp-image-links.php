@@ -3,7 +3,7 @@
  * Plugin Name: EXMAGE - WordPress Image Links
  * Plugin URI: https://villatheme.com/extensions/exmage-wordpress-image-links/
  * Description: Add images using external links - Save your storage with EXMAGE effortlessly
- * Version: 1.0.25
+ * Version: 1.1.0
  * Author: VillaTheme(villatheme.com)
  * Author URI: https://villatheme.com
  * License:           GPL v2 or later
@@ -19,9 +19,20 @@ if (!defined('ABSPATH')) {
 }
 
 define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.0.25');
-include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 define('EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path(__FILE__));
 define('EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . "includes" . DIRECTORY_SEPARATOR);
+if ( is_plugin_active( 'exmage-wordpress-image-links/exmage-wordpress-image-links.php' ) ) {
+	return;
+}
+
+//compatible with 'High-Performance order storage (COT)'
+add_action( 'before_woocommerce_init', function () {
+	if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
+	}
+} );
+include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 require_once EXMAGE_WP_IMAGE_LINKS_INCLUDES . "define.php";
 
 /**
@@ -276,31 +287,68 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		public function post_upload_ui() {
 			global $pagenow;
 			?>
-            <div>
-                <p class="exmage-use-url-instructions upload-instructions drop-instructions"><?php esc_html_x('or', 'Uploader: Upload file - or - Use an external image URL', 'exmage-wp-image-links'); ?></p>
-                <div class="exmage-use-url-container">
-                    <label for="exmage-use-url-input"><?php /* translators: %s: admin url */
-						$pagenow === 'media-new.php' ? esc_html_e('Save storage by using external image URLs(one line each):', 'exmage-wp-image-links') : printf(wp_kses_post(__('Save storage by using an external image URL(need to add multiple URLs? <a target="_blank" href="%s">Click here</a>):', 'exmage-wp-image-links')), esc_url(admin_url('media-new.php'))); ?></label>
-                    <div class="exmage-use-url-input-container">
-						<?php
-						if ($pagenow === 'media-new.php') {
-							?>
-                            <textarea class="exmage-use-url-input-multiple" rows="10"></textarea>
-                            <p>
-                                <span class="exmage-use-url-input-multiple-add button button-primary"><?php esc_html_e('Add', 'exmage-wp-image-links') ?></span>
-                            </p>
-							<?php
-						} else {
-							?>
-                            <input type="search" id="exmage-use-url-input" class="exmage-use-url-input"
-                                   placeholder="<?php esc_attr_e('Paste an external image URL here or press Enter after you type to process', 'exmage-wp-image-links') ?>">
-							<?php
-						}
-						?>
-                        <div class="exmage-use-url-input-overlay exmage-hidden"></div>
+            <div class="exmage-container-form">
+                <div class="exmage-wrap-tab-content">
+                    <div class="exmage-tab-content-item exmage-tab-content-media exmage-tab-active">
+                        <div class="exmage-use-url-container">
+                            <div class="exmage-use-url-input-container">
+								<?php
+								if ( $pagenow === 'media-new.php' ) {
+									?>
+                                    <div class="exmage-wrap-table-fields-external">
+                                        <div class="exmage-wrap-body-table">
+                                            <div class="exmage-table-tr exmage_item_field" data-media_type="image">
+                                                <div class="exmage-table-td exmage_input_field">
+                                                    <div class="exmage_wrap_input_field">
+                                                        <input type="text" class="exmage-add-external-url-field exmage-add-external-url-media" name="exmage-use-url-input-multiple" value="" placeholder="Paste url here">
+                                                    </div>
+                                                </div>
+                                                <div class="exmage-table-td exmage_preview_field">
+                                                    <img src="<?php echo EXMAGE_WP_IMAGE_LINKS_IMAGES . 'placeholder_image.png';// phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage ?>" data-placeholder_src="<?php echo EXMAGE_WP_IMAGE_LINKS_IMAGES . 'placeholder_image.png' ;// phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage ?>" class="exmage-placeholder exmage-image-preview">
+                                                </div>
+
+                                                <div class="exmage-table-td exmage_action_field">
+                                                    <span class="exmage-button-action exmage-delete-field"></span>
+                                                    <span class="exmage-button-action exmage-add-field"></span>
+                                                </div>
+                                            </div>
+                                            <div class="exmage-use-url-input-overlay exmage-hidden"></div>
+                                        </div>
+                                        <span class="exmage-use-url-input-multiple-add button button-primary"><?php esc_html_e( 'Add to gallery', 'exmage-wordpress-image-links' ) ?></span>
+                                    </div>
+									<?php
+								} else {
+									?>
+                                    <div class="exmage-wrap-table-fields-external">
+                                        <div class="exmage-wrap-body-table">
+                                            <div class="exmage-table-tr exmage_item_field">
+                                                <div class="exmage-table-td exmage_input_field">
+                                                    <div class="exmage_wrap_input_field">
+                                                        <input type="text" class="exmage-add-external-url-field exmage-add-external-url-media" name="exmage-use-url-input-multiple" value="" placeholder="Paste url here">
+                                                    </div>
+                                                </div>
+                                                <div class="exmage-table-td exmage_action_field">
+                                                    <span class="exmage-button-action button button-primary exmage-use-url-input-multiple-add">Add</span>
+                                                </div>
+
+                                            </div>
+                                            <div class="exmage-use-url-input-overlay exmage-hidden"></div>
+                                        </div>
+                                    </div>
+                                    <!--input type="search" id="exmage-use-url-input" class="exmage-use-url-input" placeholder="<?php esc_attr_e( 'Paste an external image URL here or press Enter after you type to process', 'exmage-wordpress-image-links' ) ?>" -->
+									<?php
+								}
+								?>
+                            </div>
+
+                        </div>
                     </div>
-                    <div class="exmage-use-url-message"></div>
+
                 </div>
+                <div class="exmage-use-url-input-overlay exmage-hidden"></div>
+                <div class="exmage-use-url-message"></div>
+                <textarea class="exmage-use-url-input-multiple exmage-hidden"></textarea>
+                <textarea class="exmage-use-url-input-multiple-thumbnail exmage-hidden"></textarea>
             </div>
 			<?php
 		}
@@ -453,19 +501,21 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 */
 		private static function html_for_external_image( $external_link, $attachment_id ) {
 			?>
-            <a target="_blank"
-               href="<?php echo esc_url($external_link) ?>"><span
-                        class="exmage-external-url"><?php echo esc_html($external_link) ?></span><span
-                        class="dashicons dashicons-external"></span>
-            </a>
-            <p class="exmage-action-buttons-container">
+            <div class="exmage-col-wrap-external-url">
+                <div class="exmage-wrap-edit-field-external-url">
+                    <input type="text" class="exmage-edit-external-url-field" value="<?php echo esc_html( $external_link ) ?>">
+                    <span class="exmage-external-url"><?php echo esc_html( $external_link ) ?></span>
+                </div>
+                <a target="_blank" href="<?php echo esc_url( $external_link ) ?>" title="View Original Image"><span class="dashicons dashicons-external"></span></a>
+            </div>
+            <div class="exmage-action-buttons-container">
                 <span class="button exmage-migrate-button"
-                      data-attachment_id="<?php echo esc_attr($attachment_id) ?>"
-                      title="<?php esc_attr_e('Save this image to your WordPress server like normal images so that it will be editable', 'exmage-wp-image-links') ?>">
+                      data-attachment_id="<?php echo esc_attr( $attachment_id ) ?>"
+                      title="<?php esc_attr_e( 'Save this image to your WordPress server like normal images so that it will be editable', 'exmage-wordpress-image-links' ) ?>">
                     <span class="dashicons dashicons-cloud-saved"></span>
                     <span class="exmage-migrate-button-overlay"></span>
                 </span>
-            </p>
+            </div>
 			<?php
 		}
 
@@ -697,7 +747,7 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 			$is_single = isset($_POST['is_single']) ? sanitize_text_field($_POST['is_single']) : '';
 			$urls      = isset($_POST['urls']) ? sanitize_trackback_urls($_POST['urls']) : '';
 			if (!empty($urls)) {
-				$urls_array = explode("\n", $urls);
+				$urls_array = explode(",", $urls);
 				$urls_array = array_filter($urls_array);
 				$urls_array = array_values(array_unique($urls_array));
 				if ($is_single) {
@@ -993,7 +1043,7 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 						'support'    => 'https://wordpress.org/support/plugin/exmage-wp-image-links/',
 						'docs'       => 'http://docs.villatheme.com/?item=exmage',
 						'review'     => 'https://wordpress.org/support/plugin/exmage-wp-image-links/reviews/?rate=5#rate-response',
-						'pro_url'    => '',
+						'pro_url'    => 'https://1.envato.market/N9DKr7',
 						'css'        => EXMAGE_WP_IMAGE_LINKS_CSS,
 						'image'      => EXMAGE_WP_IMAGE_LINKS_IMAGES,
 						'slug'       => 'exmage-wp-image-links',

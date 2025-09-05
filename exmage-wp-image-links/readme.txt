@@ -15,9 +15,13 @@ Add images using external links - Save your storage with EXMAGE effortlessly
 
 EXMAGE - WordPress Image Links helps you save storage by using external image URLs. These images are shown in Media library like normal images so that you can choose them for post/product featured image, WooCommerce product gallery... or everywhere that images are chosen from Media library.
 
-[Try the Demo](https://new2new.com/?item=exmage "Demo EXMAGE - WordPress Image Links") | [Documents](https://docs.villatheme.com/?item=exmage "Documents") | [Facebook group](https://www.facebook.com/groups/villatheme "VillaTheme")
+[Try the Demo](https://new2new.com/?item=exmage "Demo EXMAGE - WordPress Image Links") | [Documents](https://docs.villatheme.com/?item=exmage "Documents") | [Pro Version](https://1.envato.market/N9DKr7 "Premium Version") | | [Facebook group](https://www.facebook.com/groups/villatheme "VillaTheme")
 
+###Preview EXMAGE - WordPress Image Links
 [youtube https://youtu.be/R_hNwUIGqIQ]
+
+###How to install and use the plugin
+[youtube https://youtu.be/KSQoZjM7yBI]
 
 ### Important Notice:
 
@@ -177,17 +181,25 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 == Installation ==
 
 1. Unzip the download package
-1. Upload `exmage-wp-image-links` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
+2. Upload `exmage-wp-image-links` to the `/wp-content/plugins/` directory
+3. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Frequently Asked Questions ==
 
 == Screenshots ==
-1. Add image using external link in add media page
-2. Add image using external link on upload popup
-3. Photo added to gallery using external link
+1. Photos added to gallery using external link
+2. Add images using external link in "Add Media File"
+3. Add image using external link on Upload popup
+4. AI generated Alt text
+5. Display video anywhere using shortcode
+6. Video displayed using shortcode
 
 == Changelog ==
+/**1.1.0 - 2025.09.05**/
+– Updated: Updated to new interface
+– Updated: Compatible with WC 10.1.2
+– Updated: Update support class
+
 /**1.0.25 - 2025.07.26**/
 – Updated: Compatible with WP 6.8.2 and WC 10.0.3
 – Updated: Update support class
