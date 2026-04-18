@@ -199,6 +199,10 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 6. Video displayed using shortcode
 
 == Changelog ==
+/**1.1.2 - 2026.04.18**/
+– Added: Bulk import multiple image URLs at once with preview and checkbox selection
+– Added: Import images from CSV file (drag & drop or browse)
+
 /**1.1.1 - 2026.01.20**/
 – Updated: Compatible with WC 10.4 and WP 6.9
 – Updated: Update support class

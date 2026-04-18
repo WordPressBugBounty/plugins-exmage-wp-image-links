@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: EXMAGE - WordPress Image Links\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-13 02:06+0000\n"
+"POT-Creation-Date: 2026-04-17 06:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -13,58 +13,94 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.5.4; wp-5.8.2\n"
+"X-Loco-Version: 2.8.3; wp-6.9.4; php-8.3.24\n"
 "X-Domain: exmage-wp-image-links"
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:203
+#. %s: admin url
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:279
 #, php-format
 msgid "<a href=\"%s\">Add images from URLs</a>"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:224
-msgid "Add"
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:372
+msgid "Add All to Gallery"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:497
+#. Description of the plugin
+msgid ""
+"Add images using external links - Save your storage with EXMAGE effortlessly"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:315
+msgid "Add to gallery"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:352
+msgid "Browse for CSV file"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:641
 msgid "Cannot delete file"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:503
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:567
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:647
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:711
 msgid "Cannot find external URL"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:376
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:518
 msgid ""
 "Change this image to use external link. The existing image file stored on "
 "your server will be deleted."
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:909
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:363
+msgid "Check All"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:365
+msgid "Clear"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:1057
 msgid "Click here to select this image"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:1059
+msgid "Could not read the CSV file."
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:440
+msgid "Deselect"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:349
+msgid "Drag & drop CSV file here"
 msgstr ""
 
 #. Name of the plugin
 msgid "EXMAGE - WordPress Image Links"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:114
+#. %s: url left in the queue
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:189
 #, php-format
 msgid ""
 "EXMAGE - WordPress Image Links: %s URLs are being processed in the "
 "background."
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:125
+#. %s: url left in the queue
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:200
 #, php-format
 msgid "EXMAGE - WordPress Image Links: %s URLs are in the queue."
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:136
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:211
 msgid "EXMAGE - WordPress Image Links: all URLs are processed."
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:338
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:480
 msgid "External URL"
 msgstr ""
 
@@ -76,62 +112,55 @@ msgstr ""
 msgid "https://villatheme.com/extensions/exmage-wordpress-image-links/"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:728
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:873
 msgid "Image exists"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:686
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:831
 msgid "Invalid image URL"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:500
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:732
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:644
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:877
 msgid "Invalid or not supported image URL"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:658
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:803
 msgid "No valid image URLs found"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:230
-msgid ""
-"Paste an external image URL here or press Enter after you type to process"
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:350
+msgid "or"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:217
-#, php-format
-msgid ""
-"Save storage by using an external image URL(need to add multiple URLs? <a "
-"target=\"_blank\" href=\"%s\">Click here</a>):"
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:344
+msgid "Paste multiple URLs here (separated by newline, comma, or space)"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:217
-msgid "Save storage by using external image URLs(one line each):"
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:435
+msgid "Remove"
 msgstr ""
 
-#. Description of the plugin
-msgid "Save storage by using external image URLs."
-msgstr ""
-
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:398
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:542
 msgid ""
 "Save this image to your WordPress server like normal images so that it will "
 "be editable"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:570
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:714
 msgid "Saved already, please reload the page"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:98
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:173
 msgid "Stop processing"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:714
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:859
 msgid "Successful"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:651
+#. %1$s: number of url, %2$s: threshold of url
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:796
 #, php-format
 msgid ""
 "The number of URLs(%1$s) is greater than threshold(%2$s), they will be "
@@ -139,8 +168,17 @@ msgid ""
 "exmage_ajax_handle_url_threshold filter hook.)"
 msgstr ""
 
-#: D:/git/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:302
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:1058
+msgid ""
+"This CSV file does not contain any valid image or video URLs (http or https)."
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:444
 msgid "This is an external media file"
+msgstr ""
+
+#: E:/git-comeback/free-version/exmage-wp-image-links/exmage-wp-image-links/exmage-wp-image-links.php:364
+msgid "Uncheck All"
 msgstr ""
 
 #. Author of the plugin
