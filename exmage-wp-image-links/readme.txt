@@ -3,7 +3,7 @@ Contributors: villatheme, mrt3vn
 Donate link: http://www.villatheme.com/donate
 Tags: elementor gallery with links, woocommerce product image external url,wordpress gallery custom links, wordpress gallery with links, wordpress image links
 Requires at least: 5.0.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -199,6 +199,9 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 6. Video displayed using shortcode
 
 == Changelog ==
+/**1.1.3 - 2026.06.20**/
+- Updated: VillaTheme support
+
 /**1.1.2 - 2026.04.18**/
 – Added: Bulk import multiple image URLs at once with preview and checkbox selection
 – Added: Import images from CSV file (drag & drop or browse)
