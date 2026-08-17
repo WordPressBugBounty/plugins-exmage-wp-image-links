@@ -3,7 +3,7 @@
  * Plugin Name: EXMAGE - WordPress Image Links
  * Plugin URI: https://villatheme.com/extensions/exmage-wordpress-image-links/
  * Description: Add images using external links - Save your storage with EXMAGE effortlessly
- * Version: 1.1.3
+ * Version: 1.1.4
  * Author: VillaTheme(villatheme.com)
  * Author URI: https://villatheme.com
  * License:           GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.1.3');
+define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.1.4');
 define('EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path(__FILE__));
 define('EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . "includes" . DIRECTORY_SEPARATOR);
 if ( is_plugin_active( 'exmage-wordpress-image-links/exmage-wordpress-image-links.php' ) ) {
@@ -1071,9 +1071,9 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 				new VillaTheme_Support(
 					array(
 						'support'    => 'https://wordpress.org/support/plugin/exmage-wp-image-links/',
-						'docs'       => 'http://docs.villatheme.com/?item=exmage',
+						'docs'       => 'https://docs.villatheme.com/?item=exmage',
 						'review'     => 'https://wordpress.org/support/plugin/exmage-wp-image-links/reviews/?rate=5#rate-response',
-						'pro_url'    => 'https://1.envato.market/N9DKr7',
+						'pro_url'    => 'https://villatheme.com/extensions/exmage-wordpress-image-links',
 						'css'        => EXMAGE_WP_IMAGE_LINKS_CSS,
 						'image'      => EXMAGE_WP_IMAGE_LINKS_IMAGES,
 						'slug'       => 'exmage-wp-image-links',
