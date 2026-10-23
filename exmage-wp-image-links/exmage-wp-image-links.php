@@ -10,8 +10,8 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: exmage-wp-image-links
  * Copyright 2021-2026 VillaTheme.com. All rights reserved.
- * Tested up to: 7.0
- * Requires PHP: 7.0
+ * Tested up to: 7.1
+ * Requires PHP: 7.4
  **/
 
 if (!defined('ABSPATH')) {
@@ -49,7 +49,7 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		public function check_environment() {
 			$environment = new VillaTheme_Require_Environment([
 					'plugin_name' => 'EXMAGE - WordPress Image Links',
-					'php_version' => '7.0',
+					'php_version' => '7.4',
 				]
 			);
 			if ($environment->has_error()) {
