@@ -49,7 +49,7 @@ abstract class EXMAGE_Background_Process extends WP_Background_Process {
 
 		$key = $wpdb->esc_like( $this->identifier . '_batch_' ) . '%';
 
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE {$column} LIKE %s", $key ) ); // @codingStandardsIgnoreLine.
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE {$column} LIKE %s", $key ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		return $this;
 	}
@@ -94,7 +94,7 @@ abstract class EXMAGE_Background_Process extends WP_Background_Process {
 
 		$key = $wpdb->esc_like( $this->identifier . '_batch_' ) . '%';
 
-		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE {$column} LIKE %s", $key ), ARRAY_A ); // @codingStandardsIgnoreLine.;
+		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE {$column} LIKE %s", $key ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 	}
 
 	/**

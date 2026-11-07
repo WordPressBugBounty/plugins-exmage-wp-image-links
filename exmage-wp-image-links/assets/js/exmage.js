@@ -1,3 +1,12 @@
+// Escape HTML attributes / text (shared by ready handlers and top-level AJAX helpers).
+function exmage_esc_attr(str) {
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function exmage_esc_html(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 jQuery(document).ready(function ($) {
     'use strict';
     $(document).on('click', '.exmage-migrate-button,.exmage-convert-external-button', function (event) {
@@ -13,16 +22,20 @@ jQuery(document).ready(function ($) {
         if (confirm('Do you really want to download ' + text_count + ' images?')) {
             let per_download = 5;
 
-            if(!ids_media.length){
+            if (!ids_media.length) {
                 get_all_attachment_id();
             }
-            if(!ids_media.length){
-                alert("No Exmage available for download.")
+            if (!ids_media.length) {
+                alert("No Exmage available for download.");
+                return;
             }
-            for (let i = 0; i < per_download; i++) {
+            let start_count = Math.min(per_download, ids_media.length);
+            for (let i = 0; i < start_count; i++) {
                 let current_media_id = ids_media[i],
                     button_selector = $('#post-' + current_media_id).find('.exmage-migrate-button');
-                convert_attachment(button_selector, true);
+                if (button_selector.length) {
+                    convert_attachment(button_selector, true);
+                }
             }
         }
     });
@@ -66,21 +79,22 @@ jQuery(document).ready(function ($) {
                 },
                 success(response) {
                     if (response.status === 'success') {
-                        // $container.find('.exmage-external-url-content').html(response.message);
-                        $container.find('.exmage-external-url-content').html('');
-                        if(multiple){
-                            ids_media = jQuery.grep(ids_media, function(value) {
+                        $container.find('.exmage-external-url-content').html(response.message || '');
+                        if (multiple) {
+                            ids_media = jQuery.grep(ids_media, function (value) {
                                 return value !== attachment_id;
                             });
 
-                            if(ids_media.length){
+                            if (ids_media.length) {
                                 let current_media_id = ids_media[0],
                                     button_selector = $('#post-' + current_media_id).find('.exmage-migrate-button');
-                                convert_attachment(button_selector, true);
+                                if (button_selector.length) {
+                                    convert_attachment(button_selector, true);
+                                }
                             }
                         }
                     } else {
-                        $message.html('<span class="exmage-message-error"><span class="exmage-use-url-message-content">' + response.message + '</span></span>');
+                        $message.html('<span class="exmage-message-error"><span class="exmage-use-url-message-content">' + exmage_esc_html(response.message || '') + '</span></span>');
                     }
                 },
                 error() {
@@ -95,8 +109,19 @@ jQuery(document).ready(function ($) {
 
     /*Process image url*/
     $(document).on('click', '.exmage-use-url-input-multiple-add', function () {
-        data_preprocessing($(this).closest('.exmage-container-form').find('.exmage-use-url-input-multiple'));
-        exmage_handle_url_input($(this).closest('.exmage-container-form').find('.exmage-add-external-url-field'));
+        let $container = $(this).closest('.exmage-container-form');
+        let urls = data_preprocessing($container);
+        let $message = $container.find('.exmage-use-url-message');
+        if (!urls.length) {
+            $message.html('<p class="exmage-message-error"><span class="exmage-use-url-message-content">Please enter at least a valid image URL to continue</span></p>');
+            return;
+        }
+        let $ta = $container.find('#exmage-multiple-urls');
+        if (!$ta.length) {
+            $ta = $('<textarea id="exmage-multiple-urls" class="exmage-multiple-textarea exmage-url-proxy"></textarea>').hide().appendTo($container);
+        }
+        $ta.val(urls.join('\n'));
+        exmage_handle_url_input($ta);
     });
 
     $(document).on('change', '.exmage-add-external-url-field.exmage-add-external-url-media', function (event) {
@@ -250,16 +275,6 @@ jQuery(document).ready(function ($) {
         $btn.prop('disabled', false);
     }
 
-    // Escape HTML attributes
-    function exmage_esc_attr(str) {
-        return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
-
-    // Escape HTML text
-    function exmage_esc_html(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
     // Update button count based on checked items
     function exmage_update_count() {
         let checked = $('#exmage-url-preview-list input:checked').length;
@@ -401,9 +416,9 @@ jQuery(document).ready(function ($) {
                     let message = '';
                     for (let i in response.details) {
                         if (response.details[i].status === 'success') {
-                            message += `<li class="exmage-message-success"><span class="exmage-result-url">${exmage_esc_html(response.details[i].url)} =></span><span class="exmage-use-url-message-content">${response.details[i].message}</span>, ID: <a target="_blank" href="${response.details[i].edit_link}">${response.details[i].id}</a></li>`;
+                            message += `<li class="exmage-message-success"><span class="exmage-result-url">${exmage_esc_html(response.details[i].url)} =></span><span class="exmage-use-url-message-content">${exmage_esc_html(response.details[i].message || '')}</span>, ID: <a target="_blank" href="${exmage_esc_attr(response.details[i].edit_link || '')}">${exmage_esc_html(String(response.details[i].id || ''))}</a></li>`;
                         } else {
-                            message += `<li class="exmage-message-error"><span class="exmage-result-url">${exmage_esc_html(response.details[i].url)} =></span><span class="exmage-use-url-message-content">${response.details[i].message}</span></li>`;
+                            message += `<li class="exmage-message-error"><span class="exmage-result-url">${exmage_esc_html(response.details[i].url)} =></span><span class="exmage-use-url-message-content">${exmage_esc_html(response.details[i].message || '')}</span></li>`;
                         }
                     }
                     message = `<ol>${message}</ol>`;
@@ -436,9 +451,9 @@ jQuery(document).ready(function ($) {
                         active_frame.trigger('library:selection:add');
                     }
                 } else if (response.status === 'queue') {
-                    $message.html('<p class="exmage-message-queue"><span class="exmage-use-url-message-content">' + response.message + '</span></p>');
+                    $message.html('<p class="exmage-message-queue"><span class="exmage-use-url-message-content">' + exmage_esc_html(response.message || '') + '</span></p>');
                 } else {
-                    $message.html('<p class="exmage-message-error"><span class="exmage-use-url-message-content">' + (response.message || 'An error occurred') + '</span></p>');
+                    $message.html('<p class="exmage-message-error"><span class="exmage-use-url-message-content">' + exmage_esc_html(response.message || 'An error occurred') + '</span></p>');
                 }
             },
             error() {
@@ -450,26 +465,22 @@ jQuery(document).ready(function ($) {
         });
     });
 });
-function data_preprocessing($input) {
-    let $container = $input.closest('.exmage-container-form'),
-        tab_content = $container.find('.exmage-wrap-tab-content'),
-        tab_content_list = tab_content.find('.exmage-tab-content-item');
+function data_preprocessing($container) {
+    let $wrap = jQuery($container);
+    if (!$wrap.hasClass('exmage-container-form')) {
+        $wrap = $wrap.closest('.exmage-container-form');
+    }
 
     let arr_url = [];
-
-    let tr = tab_content_list.find('.exmage-wrap-body-table .exmage-table-tr');
-    tr.each(function (i, e) {
-        let tr_this = jQuery(this);
-        let field_url = tr_this.find('.exmage-add-external-url-field');
-        if (field_url.val()) {
-            arr_url.push(field_url.val());
+    $wrap.find('.exmage-wrap-body-table .exmage-table-tr').each(function () {
+        let field_url = jQuery(this).find('.exmage-add-external-url-field');
+        let val = field_url.val();
+        if (val) {
+            arr_url.push(String(val).trim());
         }
-
     });
 
-    jQuery('.exmage-use-url-input-multiple').val(arr_url.toString());
-
-
+    return arr_url;
 }
 function exmage_handle_url_input($input, $type) {
     let $container = $input.closest('.exmage-container-form'),
@@ -518,11 +529,15 @@ function exmage_handle_url_input($input, $type) {
                         if (response.status === 'success') {
                             let details = response.details, message = '';
                             for (let i in details) {
+                                let detail_url = exmage_esc_html(details[i].url || '');
+                                let detail_message = exmage_esc_html(details[i].message || '');
+                                let detail_link = exmage_esc_attr(details[i].edit_link || '');
+                                let detail_id = exmage_esc_html(String(details[i].id || ''));
                                 if (details[i].status === 'success') {
                                     if (is_single) {
-                                        message += `<p class="exmage-message-${details[i].status}"><span class="exmage-use-url-message-content">${details[i].message}</span>, ID: <a target="_blank" href="${details[i].edit_link}">${details[i].id}</a></p>`;
+                                        message += `<p class="exmage-message-success"><span class="exmage-use-url-message-content">${detail_message}</span>, ID: <a target="_blank" href="${detail_link}">${detail_id}</a></p>`;
                                     } else {
-                                        message += `<li class="exmage-message-${details[i].status}"><span class="exmage-result-url">${details[i].url} =><span class="exmage-use-url-message-content">${details[i].message}</span>, ID: <a target="_blank" href="${details[i].edit_link}">${details[i].id}</a></li>`;
+                                        message += `<li class="exmage-message-success"><span class="exmage-result-url">${detail_url} =></span><span class="exmage-use-url-message-content">${detail_message}</span>, ID: <a target="_blank" href="${detail_link}">${detail_id}</a></li>`;
                                     }
                                     if (active_frame) {
                                         let _state = active_frame.content.view._state;
@@ -550,20 +565,20 @@ function exmage_handle_url_input($input, $type) {
                                     }
                                 } else {
                                     if (details[i].id) {
-                                        let item_message = `<span class="exmage-use-url-message-content">${details[i].message}</span>, ID: <a target="_blank" href="${details[i].edit_link}">${details[i].id}</a>`;
+                                        let item_message = `<span class="exmage-use-url-message-content">${detail_message}</span>, ID: <a target="_blank" href="${detail_link}">${detail_id}</a>`;
                                         if (active_frame && active_frame.content.get() && active_frame.content.get().collection) {
-                                            item_message = `${item_message}. <span class="exmage-select-existing-image" data-attachment_id="${details[i].id}">${exmage_admin_params.i18n_select_existing_image}</span>.`;
+                                            item_message = `${item_message}. <span class="exmage-select-existing-image" data-attachment_id="${detail_id}">${exmage_admin_params.i18n_select_existing_image}</span>.`;
                                         }
                                         if (is_single) {
-                                            message += `<p class="exmage-message-${details[i].status}">${item_message}</p>`;
+                                            message += `<p class="exmage-message-error">${item_message}</p>`;
                                         } else {
-                                            message += `<li class="exmage-message-${details[i].status}"><span class="exmage-result-url">${details[i].url} =>${item_message}</li>`;
+                                            message += `<li class="exmage-message-error"><span class="exmage-result-url">${detail_url} =></span>${item_message}</li>`;
                                         }
                                     } else {
                                         if (is_single) {
-                                            message += `<p class="exmage-message-${details[i].status}"><span class="exmage-use-url-message-content">${details[i].message}</span></p>`;
+                                            message += `<p class="exmage-message-error"><span class="exmage-use-url-message-content">${detail_message}</span></p>`;
                                         } else {
-                                            message += `<li class="exmage-message-${details[i].status}"><span class="exmage-result-url">${details[i].url} =><span class="exmage-use-url-message-content">${details[i].message}</span></li>`;
+                                            message += `<li class="exmage-message-error"><span class="exmage-result-url">${detail_url} =></span><span class="exmage-use-url-message-content">${detail_message}</span></li>`;
                                         }
                                     }
                                 }
@@ -573,9 +588,9 @@ function exmage_handle_url_input($input, $type) {
                             }
                             $message.html(message);
                         } else if (response.status === 'queue') {
-                            $message.html('<p class="exmage-message-queue"><span class="exmage-use-url-message-content">' + response.message + '</span></p>');
+                            $message.html('<p class="exmage-message-queue"><span class="exmage-use-url-message-content">' + exmage_esc_html(response.message || '') + '</span></p>');
                         } else {
-                            $message.html('<p class="exmage-message-error"><span class="exmage-use-url-message-content">' + response.message + '</span></p>');
+                            $message.html('<p class="exmage-message-error"><span class="exmage-use-url-message-content">' + exmage_esc_html(response.message || '') + '</span></p>');
                         }
                     },
                     error() {
@@ -604,7 +619,7 @@ function exmage_handle_url_input($input, $type) {
 }
 function isImageURL(url) {
 
-    var imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg|tiff)(\?.*)?$/i;
+    var imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|tiff)(\?.*)?$/i;
 
 
     var imageDomains = [

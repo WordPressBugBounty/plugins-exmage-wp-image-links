@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @package WP-Background-Processing
  */
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals -- Third-party WP_Background_Process library; dynamic hooks use $this->identifier.
 
 if ( ! class_exists( 'WP_Background_Process' ) ) {
 
@@ -204,7 +205,7 @@ if ( ! class_exists( 'WP_Background_Process' ) ) {
 				WHERE {$column} LIKE %s
 			";
 
-			$count = $wpdb->get_var( $wpdb->prepare( $query_str, $key ) );// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$count = $wpdb->get_var( $wpdb->prepare( $query_str, $key ) );// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 			return ( $count > 0 ) ? false : true;
 		}
@@ -281,7 +282,7 @@ if ( ! class_exists( 'WP_Background_Process' ) ) {
 				LIMIT 1
 			";
 
-			$query = $wpdb->get_row( $wpdb->prepare( $query_string, $key ) );// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+			$query = $wpdb->get_row( $wpdb->prepare( $query_string, $key ) );// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 			$batch       = new stdClass();
 			$batch->key  = $query->$column;
@@ -426,7 +427,7 @@ if ( ! class_exists( 'WP_Background_Process' ) ) {
 			$schedules[ $this->identifier . '_cron_interval' ] = array(
 				'interval' => MINUTE_IN_SECONDS * $interval,
 				/* translators: %d: minutes interval */
-				'display'  => sprintf( esc_html__( 'Every %d Minutes' ), $interval ),
+				'display'  => sprintf( esc_html__( 'Every %d Minutes', 'exmage-wp-image-links' ), $interval ),
 			);
 
 			return $schedules;

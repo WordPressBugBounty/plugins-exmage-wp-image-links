@@ -3,37 +3,41 @@
  * Plugin Name: EXMAGE - WordPress Image Links
  * Plugin URI: https://villatheme.com/extensions/exmage-wordpress-image-links/
  * Description: Add images using external links - Save your storage with EXMAGE effortlessly
- * Version: 1.1.4
+ * Version: 1.1.5
  * Author: VillaTheme(villatheme.com)
  * Author URI: https://villatheme.com
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: exmage-wp-image-links
  * Copyright 2021-2026 VillaTheme.com. All rights reserved.
+ * Requires at least: 5.6
  * Tested up to: 7.1
  * Requires PHP: 7.4
  **/
 
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define('EXMAGE_WP_IMAGE_LINKS_VERSION', '1.1.4');
-define('EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path(__FILE__));
-define('EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . "includes" . DIRECTORY_SEPARATOR);
+define( 'EXMAGE_WP_IMAGE_LINKS_VERSION', '1.1.5' );
+define( 'EXMAGE_WP_IMAGE_LINKS_DIR', plugin_dir_path( __FILE__ ) );
+define( 'EXMAGE_WP_IMAGE_LINKS_INCLUDES', EXMAGE_WP_IMAGE_LINKS_DIR . 'includes' . DIRECTORY_SEPARATOR );
+
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	include_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
 if ( is_plugin_active( 'exmage-wordpress-image-links/exmage-wordpress-image-links.php' ) ) {
 	return;
 }
 
-//compatible with 'High-Performance order storage (COT)'
+// Compatible with High-Performance Order Storage (HPOS) and Cart/Checkout blocks.
 add_action( 'before_woocommerce_init', function () {
 	if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', __FILE__, true );
 	}
 } );
-include_once(ABSPATH . 'wp-admin/includes/plugin.php');
-require_once EXMAGE_WP_IMAGE_LINKS_INCLUDES . "define.php";
+require_once EXMAGE_WP_IMAGE_LINKS_INCLUDES . 'define.php';
 
 /**
  * Class EXMAGE_WP_IMAGE_LINKS
@@ -41,6 +45,13 @@ require_once EXMAGE_WP_IMAGE_LINKS_INCLUDES . "define.php";
 if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 	class EXMAGE_WP_IMAGE_LINKS {
 		public static $background_process;
+
+		/**
+		 * Per-request cache of EXMAGE attachment metas keyed by attachment ID.
+		 *
+		 * @var array<int, array{imported:mixed,external_url:mixed,attached_file:mixed}>
+		 */
+		private static $attachment_meta_bag = array();
 
 		public function __construct() {
 			add_action('plugins_loaded', array($this, 'check_environment'));
@@ -102,13 +113,13 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @param $query
 		 */
 		public function filter_exmage_in_library_page( $query ) {
-			if (function_exists('get_current_screen')) {
+			if ( function_exists( 'get_current_screen' ) ) {
 				$screen = get_current_screen();
-				if (is_admin() && $screen && $screen->base === 'upload') {
-					if (isset($_REQUEST['exmage_filter'])) {
-						$exmage_filter = sanitize_text_field($_REQUEST['exmage_filter']);
-						$meta_query    = [];
-						switch ($exmage_filter) {
+				if ( is_admin() && $screen && $screen->base === 'upload' ) {
+					if ( isset( $_REQUEST['exmage_filter'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only Media Library list filter.
+						$exmage_filter = sanitize_text_field( wp_unslash( $_REQUEST['exmage_filter'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+						$meta_query    = array();
+						switch ( $exmage_filter ) {
 							case 'only_downloaded':
 								$meta_query = [
 									'relation' => 'AND',
@@ -216,13 +227,20 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		}
 
 		public function admin_init() {
-			if (isset($_GET['exmage_stop_processing'], $_GET['exmage_nonce']) && wp_verify_nonce($_GET['exmage_nonce'], 'exmage_stop_processing')) {
-				if (!empty(self::$background_process)) {
-					self::$background_process->kill_process();
-					$url = remove_query_arg(['exmage_stop_processing', 'exmage_nonce']);
-					wp_safe_redirect($url);
-					die;
-				}
+			if ( ! isset( $_GET['exmage_stop_processing'], $_GET['exmage_nonce'] ) ) {
+				return;
+			}
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+			$nonce = sanitize_text_field( wp_unslash( $_GET['exmage_nonce'] ) );
+			if ( ! wp_verify_nonce( $nonce, 'exmage_stop_processing' ) ) {
+				return;
+			}
+			if ( ! empty( self::$background_process ) ) {
+				self::$background_process->kill_process();
+				wp_safe_redirect( remove_query_arg( array( 'exmage_stop_processing', 'exmage_nonce' ) ) );
+				exit;
 			}
 		}
 
@@ -388,11 +406,8 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 */
 		public function wp_prepare_attachment_for_js( $response ) {
 			$_exmage_external_url = '';
-			if (!get_post_meta($response['id'], '_exmage_imported', true)) {
-				$_exmage_external_url = get_post_meta($response['id'], '_exmage_external_url', true);
-				//				if ( $_exmage_external_url ) {
-				//					$response['can']['save'] = false;
-				//				}
+			if ( ! get_post_meta( $response['id'], '_exmage_imported', true ) ) {
+				$_exmage_external_url = get_post_meta( $response['id'], '_exmage_external_url', true );
 			}
 			$response['_exmage_external_url'] = $_exmage_external_url;
 
@@ -449,19 +464,19 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
                 if ( data.describe ) {
                 if ( 'image' === data.type ) { #>
                 <input type="text" value="{{ data.caption }}" class="describe" data-setting="caption"
-                       aria-label="<?php esc_attr_e('Caption'); ?>"
-                       placeholder="<?php esc_attr_e('Caption&hellip;'); ?>" {{ maybeReadOnly }}/>
+                       aria-label="<?php esc_attr_e( 'Caption', 'exmage-wp-image-links' ); ?>"
+                       placeholder="<?php esc_attr_e( 'Caption&hellip;', 'exmage-wp-image-links' ); ?>" {{ maybeReadOnly }}/>
                 <# } else { #>
                 <input type="text" value="{{ data.title }}" class="describe" data-setting="title"
                 <# if ( 'video' === data.type ) { #>
-                aria-label="<?php esc_attr_e('Video title'); ?>"
-                placeholder="<?php esc_attr_e('Video title&hellip;'); ?>"
+                aria-label="<?php esc_attr_e( 'Video title', 'exmage-wp-image-links' ); ?>"
+                placeholder="<?php esc_attr_e( 'Video title&hellip;', 'exmage-wp-image-links' ); ?>"
                 <# } else if ( 'audio' === data.type ) { #>
-                aria-label="<?php esc_attr_e('Audio title'); ?>"
-                placeholder="<?php esc_attr_e('Audio title&hellip;'); ?>"
+                aria-label="<?php esc_attr_e( 'Audio title', 'exmage-wp-image-links' ); ?>"
+                placeholder="<?php esc_attr_e( 'Audio title&hellip;', 'exmage-wp-image-links' ); ?>"
                 <# } else { #>
-                aria-label="<?php esc_attr_e('Media title'); ?>"
-                placeholder="<?php esc_attr_e('Media title&hellip;'); ?>"
+                aria-label="<?php esc_attr_e( 'Media title', 'exmage-wp-image-links' ); ?>"
+                placeholder="<?php esc_attr_e( 'Media title&hellip;', 'exmage-wp-image-links' ); ?>"
                 <# } #> {{ maybeReadOnly }} />
                 <# }
                 } #>
@@ -492,12 +507,12 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
                 <div class="exmage-external-url-container">
                     <div class="exmage-external-url-content">
 						<?php
-						$_exmage_imported = get_post_meta($post->ID, '_exmage_imported', true);
-						$external_link    = get_post_meta($post->ID, '_exmage_external_url', true);
-						if (!$_exmage_imported && $external_link) {
-							self::html_for_external_image($external_link, $post->ID);
-						} elseif ($_exmage_imported || get_post_meta($post->ID, '_vi_wad_image_id', true)) {
-							//							self::html_for_convertable_external_image( $post->ID );
+						$_exmage_imported = get_post_meta( $post->ID, '_exmage_imported', true );
+						$external_link    = get_post_meta( $post->ID, '_exmage_external_url', true );
+						if ( $external_link && ! $_exmage_imported ) {
+							self::html_for_external_image( $external_link, $post->ID );
+						} elseif ( $external_link && $_exmage_imported ) {
+							self::html_for_convertable_external_image( $post->ID );
 						}
 						?>
                     </div>
@@ -531,14 +546,13 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 			?>
             <div class="exmage-col-wrap-external-url">
                 <div class="exmage-wrap-edit-field-external-url">
-                    <input type="text" class="exmage-edit-external-url-field" value="<?php echo esc_html( $external_link ) ?>">
-                    <span class="exmage-external-url"><?php echo esc_html( $external_link ) ?></span>
+                    <span class="exmage-external-url"><?php echo esc_html( $external_link ); ?></span>
                 </div>
-                <a target="_blank" href="<?php echo esc_url( $external_link ) ?>" title="View Original Image"><span class="dashicons dashicons-external"></span></a>
+                <a target="_blank" href="<?php echo esc_url( $external_link ); ?>" title="<?php esc_attr_e( 'View Original Image', 'exmage-wp-image-links' ); ?>"><span class="dashicons dashicons-external"></span></a>
             </div>
             <div class="exmage-action-buttons-container">
                 <span class="button exmage-migrate-button"
-                      data-attachment_id="<?php echo esc_attr( $attachment_id ) ?>"
+                      data-attachment_id="<?php echo esc_attr( $attachment_id ); ?>"
                       title="<?php esc_attr_e( 'Save this image to your WordPress server like normal images so that it will be editable', 'exmage-wp-image-links' ); ?>">
                     <span class="dashicons dashicons-cloud-saved"></span>
                     <span class="exmage-migrate-button-overlay"></span>
@@ -557,19 +571,50 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @return bool
 		 */
 		private static function is_image_url_valid( $url, &$width, &$height ) {
-			$is_valid_image_url = false;
-			$request            = wp_safe_remote_get($url);
-			if (!is_wp_error($request) && wp_remote_retrieve_response_code($request) === 200 && in_array(wp_remote_retrieve_header($request, 'content-type'), self::get_supported_mime_types(), true)) {
-				$is_valid_image_url = true;
+			$timeout   = (int) apply_filters( 'exmage_image_validate_timeout', 15 );
+			$max_bytes = (int) apply_filters( 'exmage_image_validate_max_bytes', 5 * 1024 * 1024 );
+			if ( $timeout < 1 ) {
+				$timeout = 15;
 			}
-			if ($is_valid_image_url) {
-				$image_size = function_exists('wp_getimagesize') ? wp_getimagesize($url) : getimagesize($url);
-				if ($image_size !== false) {
+			if ( $max_bytes < 1 ) {
+				$max_bytes = 5 * 1024 * 1024;
+			}
+
+			$request = wp_safe_remote_get(
+				$url,
+				array(
+					'timeout'             => $timeout,
+					'limit_response_size' => $max_bytes,
+				)
+			);
+			if ( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) !== 200 ) {
+				return false;
+			}
+
+			$content_type = wp_remote_retrieve_header( $request, 'content-type' );
+			if ( is_array( $content_type ) ) {
+				$content_type = reset( $content_type );
+			}
+			$content_type = strtolower( trim( explode( ';', (string) $content_type )[0] ) );
+			if ( ! in_array( $content_type, self::get_supported_mime_types(), true ) ) {
+				return false;
+			}
+
+			$body = wp_remote_retrieve_body( $request );
+			if ( strlen( (string) $body ) > $max_bytes ) {
+				return false;
+			}
+
+			/* Use response body to avoid PHP stream SSL warnings from getimagesize( $url ). */
+			if ( $body && function_exists( 'getimagesizefromstring' ) ) {
+				$image_size = @getimagesizefromstring( $body ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				if ( false !== $image_size ) {
 					$width  = $image_size[0];
 					$height = $image_size[1];
 				}
 			}
-			return $is_valid_image_url;
+
+			return true;
 		}
 
 		/**
@@ -577,18 +622,18 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 */
 		public function convert_external_image() {
 			global $wpdb;
-			if (!current_user_can('manage_options')) {
-				wp_die('Sorry, you do not have permission.');
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'Sorry, you do not have permission.', 'exmage-wp-image-links' ) );
 			}
-			check_ajax_referer('exmage_ajax_handle_url', '_exmage_ajax_nonce');
+			check_ajax_referer( 'exmage_ajax_handle_url', '_exmage_ajax_nonce' );
 			$response      = array(
 				'status'  => 'error',
 				'message' => '',
 			);
-			$attachment_id = isset($_POST['attachment_id']) ? sanitize_text_field($_POST['attachment_id']) : '';
-			$to_external   = isset($_POST['to_external']) ? sanitize_text_field($_POST['to_external']) : '';
+			$attachment_id = isset( $_POST['attachment_id'] ) ? absint( wp_unslash( $_POST['attachment_id'] ) ) : 0;
+			$to_external   = isset( $_POST['to_external'] ) ? sanitize_text_field( wp_unslash( $_POST['to_external'] ) ) : '';
 
-			if ($attachment_id) {
+			if ( $attachment_id ) {
 				$attachment = get_post($attachment_id);
 				if ($attachment && $attachment->post_type === 'attachment') {
 					$url              = get_post_meta($attachment_id, '_exmage_external_url', true);
@@ -613,25 +658,30 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 							$width              = $height = 800;
 							$is_valid_image_url = self::is_image_url_valid($to_url, $width, $height);
 
-							if ($is_valid_image_url) {
-								$file = get_attached_file($attachment_id, true);
-								if (is_multisite()) {
-									clean_dirsize_cache($file);
+							if ( $is_valid_image_url ) {
+								$file       = get_attached_file( $attachment_id, true );
+								$image_id   = '';
+								$is_ali_cdn = false;
+								if ( is_multisite() && function_exists( 'clean_dirsize_cache' ) ) {
+									clean_dirsize_cache( $file );
 								}
-								if (wp_delete_attachment_files($attachment_id, wp_get_attachment_metadata($attachment_id), get_post_meta($attachment_id, '_wp_attachment_backup_sizes', true), $file)) {
-									$to_url = self::process_image_url($to_url, $image_id, $is_ali_cdn);
-									update_post_meta($attachment_id, '_wp_attached_file', $to_url);
-									if ($_exmage_imported) {
-										delete_post_meta($attachment_id, '_exmage_imported');
-									} else {
-										//										delete_post_meta( $attachment_id, '_vi_wad_image_id' );
+								if ( wp_delete_attachment_files( $attachment_id, wp_get_attachment_metadata( $attachment_id ), get_post_meta( $attachment_id, '_wp_attachment_backup_sizes', true ), $file ) ) {
+									$to_url = self::process_image_url( $to_url, $image_id, $is_ali_cdn );
+									update_post_meta( $attachment_id, '_wp_attached_file', $to_url );
+									update_post_meta( $attachment_id, '_exmage_external_url', $to_url );
+									if ( $_exmage_imported ) {
+										delete_post_meta( $attachment_id, '_exmage_imported' );
 									}
-									self::update_attachment_metadata($attachment_id, $to_url, $is_ali_cdn, $width, $height);
+									self::update_attachment_metadata( $attachment_id, $to_url, $is_ali_cdn, $width, $height );
 									/*guid cannot be changed with wp_update_post function*/
-									$wpdb->update($wpdb->posts, array(// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-										'guid'       => strlen($to_url) > 255 ? '' : $to_url,//guid is varchar(255)
-										'post_title' => apply_filters('exmage_insert_attachment_image_name', basename($image_id), $image_id, $to_url, $attachment->post_parent),
-									), array('ID' => $attachment_id));
+									$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+										$wpdb->posts,
+										array(
+											'guid'       => strlen( $to_url ) > 255 ? '' : $to_url,//guid is varchar(255)
+											'post_title' => apply_filters( 'exmage_insert_attachment_image_name', basename( $image_id ), $image_id, $to_url, $attachment->post_parent ),
+										),
+										array( 'ID' => $attachment_id )
+									);
 									$response['status'] = 'success';
 									ob_start();
 									self::html_for_external_image($to_url, $attachment_id);
@@ -649,6 +699,12 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 					} else {
 						if (!$_exmage_imported) {
 							if ($url) {
+								$width              = $height = 800;
+								$is_valid_image_url = self::is_image_url_valid( $url, $width, $height );
+								if ( ! $is_valid_image_url ) {
+									$response['message'] = esc_html__( 'Invalid or not supported image URL', 'exmage-wp-image-links' );
+									wp_send_json( $response );
+								}
 								$tmp                    = download_url($url);
 								$file_array['name']     = $attachment->post_title ? $attachment->post_title : basename($url);
 								$file_array['tmp_name'] = $tmp;
@@ -682,12 +738,16 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 										}
 										// Save the attachment metadata.
 										$update_post = wp_update_post($update_data, true);
-										if (!is_wp_error($update_post)) {
+										if ( ! is_wp_error( $update_post ) ) {
 											/*guid cannot be changed with wp_update_post function*/
-											$wpdb->update($wpdb->posts, array(// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-												'guid' => strlen($file_url) > 255 ? '' : $file_url,
-												//guid is varchar(255)
-											), array('ID' => $attachment_id));
+											$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+												$wpdb->posts,
+												array(
+													'guid' => strlen( $file_url ) > 255 ? '' : $file_url,
+													//guid is varchar(255)
+												),
+												array( 'ID' => $attachment_id )
+											);
 											$response['status'] = 'success';
 											ob_start();
 											self::html_for_convertable_external_image($attachment_id);
@@ -704,7 +764,9 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 										$response['message'] = $file['error'];
 									}
 								} else {
-									@wp_delete_file($file_array['tmp_name']);
+									if ( ! empty( $file_array['tmp_name'] ) ) {
+										wp_delete_file( $file_array['tmp_name'] );
+									}
 									$response['message'] = $tmp->get_error_message();
 								}
 							} else {
@@ -728,29 +790,30 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @return string|string[]|null
 		 */
 		public static function process_image_url( $url, &$image_id, &$is_ali_cdn ) {
-			$new_url = $url;
-			//			$new_url    = preg_replace( "/(.+?)(.jpg|.jpeg)(.*)/", "$1$2", $new_url );
-			$parse_url  = wp_parse_url($new_url);
-			$scheme     = empty($parse_url['scheme']) ? 'http' : $parse_url['scheme'];
-			$image_id   = "{$parse_url['host']}{$parse_url['path']}";
+			$new_url    = $url;
+			$parse_url  = wp_parse_url( $new_url );
+			$scheme     = empty( $parse_url['scheme'] ) ? 'https' : $parse_url['scheme'];
+			$host       = isset( $parse_url['host'] ) ? $parse_url['host'] : '';
+			$path       = isset( $parse_url['path'] ) ? $parse_url['path'] : '';
+			$image_id   = $host . $path;
 			$new_url    = "{$scheme}://{$image_id}";
-			$is_ali_cdn = in_array($parse_url['host'], array(
+			$is_ali_cdn = in_array( $host, array(
 				'ae01.alicdn.com',
 				'ae02.alicdn.com',
 				'ae03.alicdn.com',
 				'ae04.alicdn.com',
 				'ae05.alicdn.com',
-			), true);
-			preg_match('/[^?]+\.(jpg|JPG|jpeg|JPEG|jpe|JPE|gif|GIF|png|PNG)/', $new_url, $matches);
-			if (!is_array($matches) || !count($matches)) {
-				preg_match('/[^?]+\.(jpg|JPG|jpeg|JPEG|jpe|JPE|gif|GIF|png|PNG)/', $url, $matches);
-				if (is_array($matches) && count($matches)) {
+			), true );
+			preg_match( '/[^?]+\.(jpg|JPG|jpeg|JPEG|jpe|JPE|gif|GIF|png|PNG|webp|WEBP)/', $new_url, $matches );
+			if ( ! is_array( $matches ) || ! count( $matches ) ) {
+				preg_match( '/[^?]+\.(jpg|JPG|jpeg|JPEG|jpe|JPE|gif|GIF|png|PNG|webp|WEBP)/', $url, $matches );
+				if ( is_array( $matches ) && count( $matches ) ) {
 					$new_url  .= "?{$matches[0]}";
 					$image_id .= "?{$matches[0]}";
-				} elseif (!empty($parse_url['query'])) {
+				} elseif ( ! empty( $parse_url['query'] ) ) {
 					$new_url .= '?' . $parse_url['query'];
 				}
-			} elseif (!empty($parse_url['query'])) {
+			} elseif ( ! empty( $parse_url['query'] ) ) {
 				$new_url .= '?' . $parse_url['query'];
 			}
 
@@ -761,20 +824,23 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 *
 		 */
 		public function handle_url() {
-			if (!current_user_can('manage_options')) {
-				wp_die('Sorry, you do not have permission.');
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'Sorry, you do not have permission.', 'exmage-wp-image-links' ) );
 			}
-			check_ajax_referer('exmage_ajax_handle_url', '_exmage_ajax_nonce');
+			check_ajax_referer( 'exmage_ajax_handle_url', '_exmage_ajax_nonce' );
 			$response  = array(
 				'status'  => 'error',
 				'message' => '',
 				'id'      => '',
 				'details' => array(),
 			);
-			$post_id   = isset($_POST['post_id']) ? sanitize_text_field($_POST['post_id']) : '';
-			$is_single = isset($_POST['is_single']) ? sanitize_text_field($_POST['is_single']) : '';
-			$urls      = isset($_POST['urls']) ? sanitize_trackback_urls($_POST['urls']) : '';
-			if (!empty($urls)) {
+			$post_id   = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
+			$is_single = isset( $_POST['is_single'] ) ? sanitize_text_field( wp_unslash( $_POST['is_single'] ) ) : '';
+			$urls      = '';
+			if ( isset( $_POST['urls'] ) ) {
+				$urls = sanitize_text_field( wp_unslash( $_POST['urls'] ) );
+			}
+			if ( ! empty( $urls ) ) {
 				$urls_array = explode(",", $urls);
 				$urls_array = array_filter($urls_array);
 				$urls_array = array_values(array_unique($urls_array));
@@ -783,9 +849,10 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 				}
 				$urls_count     = count($urls_array);
 				$urls_threshold = apply_filters('exmage_ajax_handle_url_threshold', 20);
-				if ($urls_count <= $urls_threshold) {
-					foreach ($urls_array as $url) {
-						$response['details'][] = self::add_image($url, $image_id, $post_id);
+				if ( $urls_count <= $urls_threshold ) {
+					foreach ( $urls_array as $url ) {
+						$image_id              = '';
+						$response['details'][] = self::add_image( $url, $image_id, $post_id );
 					}
 				} else {
 					foreach ($urls_array as $url) {
@@ -824,8 +891,8 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 				'edit_link' => '',
 			);
 
-			$url = sanitize_trackback_urls($url);
-			$url = wp_http_validate_url($url);
+			$url = esc_url_raw( $url );
+			$url = wp_http_validate_url( $url );
 
 			if (!$url) {
 				$result['message'] = esc_html__('Invalid image URL', 'exmage-wp-image-links');
@@ -835,8 +902,9 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 
 			$width              = $height = 800;
 			$is_valid_image_url = self::is_image_url_valid($url, $width, $height);
-			if ($is_valid_image_url) {
-				$url   = self::process_image_url($url, $image_id, $is_ali_cdn);
+			if ( $is_valid_image_url ) {
+				$is_ali_cdn = false;
+				$url        = self::process_image_url( $url, $image_id, $is_ali_cdn );
 				$exist = attachment_url_to_postid($url);
 				if (!$exist) {
 					$check_filetype   = wp_check_filetype(basename($url), null);
@@ -870,6 +938,7 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 						'action' => 'edit'
 					), admin_url('post.php'));
 					$result['id']        = $exist;
+					$result['status']    = 'success';
 					$result['message']   = esc_html__('Image exists', 'exmage-wp-image-links');
 					$result['edit_link'] = esc_url($edit_link);
 				}
@@ -890,9 +959,7 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @param $height
 		 */
 		private static function update_attachment_metadata( $attachment_id, $url, $is_ali_cdn, $width, $height ) {
-			if (!get_post_meta($attachment_id, '_exmage_external_url', true)) {
-				update_post_meta($attachment_id, '_exmage_external_url', $url);
-			}
+			update_post_meta( $attachment_id, '_exmage_external_url', $url );
 			$wp_sizes    = self::get_sizes();
 			$image_sizes = array();
 			$pathinfo    = pathinfo($url);
@@ -917,7 +984,9 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 						/*WordPress image size format: original-image-name-100x100.jpg*/
 						$size_url = apply_filters('exmage_image_size_url', substr($url, 0, strlen($url) - strlen($pathinfo['extension']) - 1) . "-{$size_width}x{$size_width}.{$pathinfo['extension']}", $url, $size_width);
 					}
-					$is_valid_image_url = self::is_image_url_valid($size_url, $_width, $_height);
+					$_width             = 0;
+					$_height            = 0;
+					$is_valid_image_url = self::is_image_url_valid( $size_url, $_width, $_height );
 					if (!$is_valid_image_url) {
 						/*Use original url if the image size url is invalid*/
 						$size_url = $url;
@@ -1016,58 +1085,67 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @return bool|mixed
 		 */
 		private static function select_size( $size, $image_sizes = array() ) {
-			if (empty($image_sizes)) {
+			if ( empty( $image_sizes ) ) {
 				return $size;
 			}
 
-			$min_size = $max_size = false;
-			foreach ($image_sizes as $props) {
-				if ((int)$size['width'] == (int)$props['width']) {
+			$min_size = false;
+			$max_size = false;
+			foreach ( $image_sizes as $props ) {
+				if ( (int) $size['width'] === (int) $props['width'] ) {
 					return $props;
 				}
 
-				if (intval($size['width']) < intval($props['width']) && (!$min_size || intval($min_size['width']) > intval($props['width']))) {
+				if ( (int) $size['width'] < (int) $props['width'] && ( ! $min_size || (int) $min_size['width'] > (int) $props['width'] ) ) {
 					$min_size = $props;
 				}
 
-				if (!$max_size || (intval($max_size['width']) < intval($props['width']))) {
+				if ( ! $max_size || ( (int) $max_size['width'] < (int) $props['width'] ) ) {
 					$max_size = $props;
 				}
 			}
 
-			return !$min_size ? $max_size : $min_size;
+			return ! $min_size ? $max_size : $min_size;
 		}
 
 		/**
-		 * Enqueue script wherever media is used
+		 * Enqueue script on Media screens or when Media is already loaded.
 		 */
 		public function wp_enqueue_media() {
-			if (is_admin()) {
-				if (!did_action('wp_enqueue_media')) {
-					wp_enqueue_media();
-				}
-				wp_enqueue_script('exmage-media', EXMAGE_WP_IMAGE_LINKS_JS . 'media.js', array('jquery'), EXMAGE_WP_IMAGE_LINKS_VERSION, false);
-				wp_enqueue_style('exmage-media', EXMAGE_WP_IMAGE_LINKS_CSS . 'media.css', [], EXMAGE_WP_IMAGE_LINKS_VERSION);
-				wp_enqueue_script('exmage-script', EXMAGE_WP_IMAGE_LINKS_JS . 'exmage.js', array('jquery'), EXMAGE_WP_IMAGE_LINKS_VERSION, false);
-				wp_localize_script('exmage-script', 'exmage_admin_params', array(
-					'ajaxurl'                    => admin_url('admin-ajax.php'),
-					'uploadurl'                  => admin_url('async-upload.php'),
-					'post_id'                    => get_the_ID(),
-					'_exmage_ajax_nonce'         => wp_create_nonce('exmage_ajax_handle_url'),
-					'i18n_select_existing_image' => esc_html__('Click here to select this image', 'exmage-wp-image-links'),
-					'i18n_csv_no_valid_urls'     => esc_html__( 'This CSV file does not contain any valid image or video URLs (http or https).', 'exmage-wp-image-links' ),
-					'i18n_csv_read_error'        => esc_html__( 'Could not read the CSV file.', 'exmage-wp-image-links' ),
-				));
+			if ( ! is_admin() ) {
+				return;
 			}
+
+			global $pagenow;
+			$media_page      = in_array( $pagenow, array( 'upload.php', 'media-new.php' ), true );
+			$media_enqueued  = did_action( 'wp_enqueue_media' ) || wp_script_is( 'media-editor', 'enqueued' ) || wp_script_is( 'media-views', 'enqueued' );
+			if ( ! $media_page && ! $media_enqueued ) {
+				return;
+			}
+
+			if ( $media_page && ! did_action( 'wp_enqueue_media' ) ) {
+				wp_enqueue_media();
+			}
+
+			wp_enqueue_script( 'exmage-media', EXMAGE_WP_IMAGE_LINKS_JS . 'media.js', array( 'jquery' ), EXMAGE_WP_IMAGE_LINKS_VERSION, false );
+			wp_enqueue_style( 'exmage-media', EXMAGE_WP_IMAGE_LINKS_CSS . 'media.css', array(), EXMAGE_WP_IMAGE_LINKS_VERSION );
+			wp_enqueue_script( 'exmage-script', EXMAGE_WP_IMAGE_LINKS_JS . 'exmage.js', array( 'jquery' ), EXMAGE_WP_IMAGE_LINKS_VERSION, false );
+			wp_localize_script( 'exmage-script', 'exmage_admin_params', array(
+				'ajaxurl'                    => admin_url( 'admin-ajax.php' ),
+				'uploadurl'                  => admin_url( 'async-upload.php' ),
+				'post_id'                    => get_the_ID(),
+				'_exmage_ajax_nonce'         => wp_create_nonce( 'exmage_ajax_handle_url' ),
+				'i18n_select_existing_image' => esc_html__( 'Click here to select this image', 'exmage-wp-image-links' ),
+				'i18n_csv_no_valid_urls'     => esc_html__( 'This CSV file does not contain any valid image or video URLs (http or https).', 'exmage-wp-image-links' ),
+				'i18n_csv_read_error'        => esc_html__( 'Could not read the CSV file.', 'exmage-wp-image-links' ),
+			) );
 		}
 
 		/**
 		 *
 		 */
 		public function init() {
-			load_plugin_textdomain('exmage-wp-image-links');
-			$this->load_plugin_textdomain();
-			if (class_exists('VillaTheme_Support')) {
+			if ( class_exists( 'VillaTheme_Support' ) ) {
 				new VillaTheme_Support(
 					array(
 						'support'    => 'https://wordpress.org/support/plugin/exmage-wp-image-links/',
@@ -1086,12 +1164,23 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		}
 
 		/**
+		 * @param int $id Attachment ID.
 		 *
+		 * @return array{imported:mixed,external_url:mixed,attached_file:mixed}
 		 */
-		public function load_plugin_textdomain() {
-			$locale = apply_filters('plugin_locale', get_locale(), 'exmage-wp-image-links');
-			load_textdomain('exmage-wp-image-links', EXMAGE_WP_IMAGE_LINKS_LANGUAGES . "exmage-wp-image-links-$locale.mo");
-			load_plugin_textdomain('exmage-wp-image-links', false, EXMAGE_WP_IMAGE_LINKS_LANGUAGES);
+		private static function get_attachment_exmage_meta( $id ) {
+			$id = (int) $id;
+			if ( isset( self::$attachment_meta_bag[ $id ] ) ) {
+				return self::$attachment_meta_bag[ $id ];
+			}
+
+			self::$attachment_meta_bag[ $id ] = array(
+				'imported'      => get_post_meta( $id, '_exmage_imported', true ),
+				'external_url'  => get_post_meta( $id, '_exmage_external_url', true ),
+				'attached_file' => get_post_meta( $id, '_wp_attached_file', true ),
+			);
+
+			return self::$attachment_meta_bag[ $id ];
 		}
 
 		/**
@@ -1101,17 +1190,18 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @return mixed
 		 */
 		public function wp_get_attachment_url( $url, $id ) {
-			if (get_post_meta($id, '_exmage_imported', true)) {
+			$meta = self::get_attachment_exmage_meta( $id );
+			if ( $meta['imported'] ) {
 				return $url;
 			}
-			if (!get_post_meta($id, '_exmage_external_url', true)) {
+			if ( ! $meta['external_url'] ) {
 				return $url;
 			}
-			$post = get_post($id);
-			if ($post && 'attachment' === $post->post_type) {
-				$_wp_attached_file = get_post_meta($id, '_wp_attached_file', true);
-				if ($_wp_attached_file) {
-					if (substr($_wp_attached_file, 0, 7) === "http://" || substr($_wp_attached_file, 0, 8) === "https://") {
+			$post = get_post( $id );
+			if ( $post && 'attachment' === $post->post_type ) {
+				$_wp_attached_file = $meta['attached_file'];
+				if ( $_wp_attached_file ) {
+					if ( strpos( $_wp_attached_file, 'http://' ) === 0 || strpos( $_wp_attached_file, 'https://' ) === 0 ) {
 						$url = $_wp_attached_file;
 					}
 				}
@@ -1130,25 +1220,26 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		 * @return mixed
 		 */
 		public function wp_calculate_image_srcset( $sources, $size_array, $image_src, $image_meta, $attachment_id ) {
-			if (get_post_meta($attachment_id, '_exmage_imported', true)) {
+			$meta = self::get_attachment_exmage_meta( $attachment_id );
+			if ( $meta['imported'] ) {
 				return $sources;
 			}
-			if (!get_post_meta($attachment_id, '_exmage_external_url', true)) {
+			if ( ! $meta['external_url'] ) {
 				return $sources;
 			}
-			if ($sources) {
+			if ( $sources ) {
 				$upload_dir    = wp_get_upload_dir();
-				$image_baseurl = trailingslashit($upload_dir['baseurl']);
-				if (is_ssl() && 'https' !== substr($image_baseurl, 0, 5) && !empty($_SERVER['HTTP_HOST']) && wp_parse_url($image_baseurl, PHP_URL_HOST) === $_SERVER['HTTP_HOST']) {
-					$image_baseurl = set_url_scheme($image_baseurl, 'https');
+				$image_baseurl = trailingslashit( $upload_dir['baseurl'] );
+				if ( is_ssl() && 'https' !== substr( $image_baseurl, 0, 5 ) && ! empty( $_SERVER['HTTP_HOST'] ) && wp_parse_url( $image_baseurl, PHP_URL_HOST ) === sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) ) {
+					$image_baseurl = set_url_scheme( $image_baseurl, 'https' );
 				}
-				$_wp_attached_file = get_post_meta($attachment_id, '_wp_attached_file', true);
-				foreach ($sources as &$src) {
-					$pos = strpos($_wp_attached_file, 'wp-content/uploads/');
-					if (false !== $pos) {
-						$src['url'] = str_replace($image_baseurl, substr($_wp_attached_file, 0, $pos - 1) . '/wp-content/uploads/', $src['url']);
+				$_wp_attached_file = $meta['attached_file'];
+				foreach ( $sources as &$src ) {
+					$pos = strpos( (string) $_wp_attached_file, 'wp-content/uploads/' );
+					if ( false !== $pos ) {
+						$src['url'] = str_replace( $image_baseurl, substr( $_wp_attached_file, 0, $pos - 1 ) . '/wp-content/uploads/', $src['url'] );
 					} else {
-						$src['url'] = str_replace($image_baseurl, '', $src['url']);
+						$src['url'] = str_replace( $image_baseurl, '', $src['url'] );
 					}
 				}
 			}
@@ -1170,20 +1261,21 @@ if (!class_exists('EXMAGE_WP_IMAGE_LINKS')) {
 		}
 
 		public function search_exmage_url_when_import_product( &$q ) {
-			if (!empty($q->query_vars['meta_query'])) {
+			if ( ! empty( $q->query_vars['meta_query'] ) ) {
 				$file = '';
-				foreach ($q->query_vars['meta_query'] as $key => &$mt_qr) {
-					if (!empty($mt_qr['key']) && $mt_qr['key'] == '_wc_attachment_source') {
+				foreach ( $q->query_vars['meta_query'] as &$mt_qr ) {
+					if ( ! empty( $mt_qr['key'] ) && '_wc_attachment_source' === $mt_qr['key'] ) {
 						$file = $mt_qr['value'];
 						break;
 					}
 				}
-				if ($file) {
-					$q->query_vars['meta_query'][] = [
+				unset( $mt_qr );
+				if ( $file ) {
+					$q->query_vars['meta_query'][] = array(
 						'key'     => '_exmage_external_url',
 						'value'   => $file,
 						'compare' => 'LIKE',
-					];
+					);
 
 					$q->query_vars['meta_query']['relation'] = 'OR';
 				}

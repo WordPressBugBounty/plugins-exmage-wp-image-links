@@ -1,5 +1,13 @@
 *** EXMAGE - WordPress Image Links Changelog ***
 
+2026.11.06 - version 1.1.5
+- Fixed: Bound remote image validation (timeout + response size) and re-validate before convert-to-local download
+- Fixed: Frontend attachment URL/srcset meta reuse (fewer get_post_meta calls per request)
+- Fixed: Scope admin EXMAGE scripts to Media screens / when Media is already enqueued
+- Fixed: Escape AJAX error messages in Media UI; convert-back control after download reload; multi-row Add to gallery URL collect
+- Fixed: PHP 8.5-safe missing hook guard in exmage_remove_filter
+- Updated: Compatible with WooCommerce 11.2
+
 2026.08.17 - version 1.1.4
 - Updated: Compatible WooCommerce 11.0
 

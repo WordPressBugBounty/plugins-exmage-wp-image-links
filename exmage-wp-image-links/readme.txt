@@ -2,7 +2,7 @@
 Contributors: villatheme, mrt3vn
 Donate link: https://www.villatheme.com/donate
 Tags: elementor gallery with links, woocommerce product image external url,wordpress gallery custom links, wordpress gallery with links, wordpress image links
-Requires at least: 5.0
+Requires at least: 5.6
 Tested up to: 7.1
 Requires PHP: 7.4
 License: GPL v2 or later
@@ -199,6 +199,13 @@ if(class_exists( 'EXMAGE_WP_IMAGE_LINKS' )){
 6. Video displayed using shortcode
 
 == Changelog ==
+2026.11.06 - version 1.1.5
+- Fixed: Bound remote image validation (timeout + response size) and re-validate before convert-to-local download
+- Fixed: Frontend attachment URL/srcset meta reuse (fewer get_post_meta calls per request)
+- Fixed: Scope admin EXMAGE scripts to Media screens / when Media is already enqueued
+- Fixed: Escape AJAX error messages in Media UI; convert-back control after download reload; multi-row Add to gallery URL collect
+- Fixed: PHP 8.5-safe missing hook guard in exmage_remove_filter
+- Updated: Compatible with WooCommerce 11.2
 
 2026.08.17 - version 1.1.4
 - Updated: Compatible WooCommerce 11.0

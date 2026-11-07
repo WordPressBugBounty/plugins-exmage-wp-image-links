@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @package WP-Background-Processing
  */
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals -- Third-party WP_Async_Request library.
 
 if ( ! class_exists( 'WP_Async_Request' ) ) {
 
@@ -134,7 +135,7 @@ if ( ! class_exists( 'WP_Async_Request' ) ) {
 				'blocking'  => false,
 				'body'      => $this->data,
 				'cookies'   => $_COOKIE,
-				'sslverify' => apply_filters( 'https_local_ssl_verify', false ),
+				'sslverify' => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core filter.
 			);
 		}
 

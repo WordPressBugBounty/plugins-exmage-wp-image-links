@@ -13,11 +13,11 @@ if ( ! function_exists( 'exmage_remove_filter' ) ) {
 	 * @return void
 	 */
 	function exmage_remove_filter( $tag, $class, $method ) {
-		$filters = $GLOBALS['wp_filter'][ $tag ];
-
-		if ( empty ( $filters ) ) {
+		if ( empty( $GLOBALS['wp_filter'][ $tag ] ) ) {
 			return;
 		}
+
+		$filters = $GLOBALS['wp_filter'][ $tag ];
 
 		foreach ( $filters as $priority => $filter ) {
 			foreach ( $filter as $identifier => $function ) {
